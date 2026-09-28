@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lead Directory Dashboard</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Font: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                            800: '#1e40af',
+                            900: '#1e3a8a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col">
+
+    <!-- Header -->
+    <header class="bg-gradient-to-r from-brand-900 via-brand-800 to-brand-700 text-white shadow-lg sticky top-0 z-30">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div class="flex flex-col sm:flex-row justify-between items-center gap-4">
+                <div class="flex items-center space-x-3">
+                    <div class="p-2.5 bg-white/10 rounded-xl backdrop-blur-md border border-white/20">
+                        <i class="fa-solid me-0 fa-address-book text-2xl text-blue-200"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-xl sm:text-2xl font-bold tracking-tight">Lead Explorer</h1>
+                        <p class="text-xs text-blue-200">Dynamic Directory & Business Intelligence</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3">
+                    <button id="refreshBtn" class="inline-flex items-center gap-2 px-3.5 py-2 bg-white/10 hover:bg-white/20 text-white text-xs sm:text-sm font-medium rounded-lg backdrop-blur-md border border-white/20 transition-all active:scale-95">
+                        <i class="fa-solid fa-rotate-right" id="refreshIcon"></i>
+                        <span>Sync Data</span>
+                    </button>
+                    <div class="px-3 py-1.5 bg-blue-900/40 rounded-full border border-blue-400/30 text-xs font-semibold text-blue-100 flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                        <span id="dataStatus">Ready</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 flex-1 w-full space-y-6">
+
+        <!-- Stats Widgets -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-5">
+            <div class="glass-panel p-4 sm:p-5 rounded-2xl shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-xs sm:text-sm font-medium text-slate-500">Total Leads</p>
+                        <h3 class="text-xl sm:text-3xl font-bold text-brand-900 mt-1" id="statTotal">--</h3>
+                    </div>
+                    <div class="w-10 h-10 sm:w-12 sm:h-12 bg-blue-50 text-brand-600 rounded-xl flex items-center justify-center text-lg sm:text-xl">
+                        <i class="fa-solid fa-users"></i>
+                    </div>
+                </div>
+                <div class="mt-3 text-xs text-slate-500 flex items-center gap-1">
+                    <span class="text-emerald-600 font-semibold"><i class="fa-solid fa-arrow-trend-up"></i> Live</span> cataloged
+                </div>
+            </div>
+
+            <div class="glass-panel p-4 sm:p-5 rounded-2xl shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-xs sm:text-sm font-medium text-slate-500">Avg Rating</p>
+                        <h3 class="text-xl sm:text-3xl font-bold text-amber-600 mt-1" id="statRating">--</h3>
+                    </div>
+                    <div class="w-10 h-10 sm:w-12 sm:h-12 bg-amber-50 text-amber-500 rounded-xl flex items-center justify-center text-lg sm:text-xl">
+                        <i class="fa-solid fa-star"></i>
+                    </div>
+                </div>
+                <div class="mt-3 text-xs text-slate-500 flex items-center gap-1">
+                    <span class="text-amber-600 font-semibold" id="statRatingCount">0</span> with reviews
+                </div>
+            </div>
+
+            <div class="glass-panel p-4 sm:p-5 rounded-2xl shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-xs sm:text-sm font-medium text-slate-500">Websites</p>
+                        <h3 class="text-xl sm:text-3xl font-bold text-brand-800 mt-1" id="statWebsites">--</h3>
+                    </div>
+                    <div class="w-10 h-10 sm:w-12 sm:h-12 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center text-lg sm:text-xl">
+                        <i class="fa-solid fa-globe"></i>
+                    </div>
+                </div>
+                <div class="mt-3 text-xs text-slate-500 flex items-center gap-1">
+                    <span class="text-brand-600 font-semibold" id="statWebsitesPct">0%</span> reachability
+                </div>
+            </div>
+
+            <div class="glass-panel p-4 sm:p-5 rounded-2xl shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-xs sm:text-sm font-medium text-slate-500">Phones</p>
+                        <h3 class="text-xl sm:text-3xl font-bold text-emerald-700 mt-1" id="statPhones">--</h3>
+                    </div>
+                    <div class="w-10 h-10 sm:w-12 sm:h-12 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center text-lg sm:text-xl">
+                        <i class="fa-solid fa-phone"></i>
+                    </div>
+                </div>
+                <div class="mt-3 text-xs text-slate-500 flex items-center gap-1">
+                    <span class="text-emerald-600 font-semibold" id="statPhonesPct">0%</span> clean contacts
+                </div>
+            </div>
+        </div>
+
+        <!-- Search & Control Toolbar -->
+        <div class="glass-panel p-4 rounded-2xl shadow-sm space-y-4">
+            <div class="flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between">
+                <!-- Search Input -->
+                <div class="relative flex-1">
+                    <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                    </div>
+                    <input type="text" id="searchInput" placeholder="Search by lead name, phone number, category, address..." 
+                        class="w-full pl-10 pr-10 py-2.5 bg-white border border-slate-200 rounded-xl text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all shadow-sm">
+                    <button id="clearSearch" class="hidden absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600">
+                        <i class="fa-solid fa-circle-xmark"></i>
+                    </button>
+                </div>
+
+                <!-- View Switcher & Quick Filters Toggle -->
+                <div class="flex items-center gap-2 justify-between md:justify-end">
+                    <div class="bg-slate-100 p-1 rounded-xl flex items-center border border-slate-200">
+                        <button id="viewGridBtn" class="px-3 py-1.5 text-xs font-semibold rounded-lg text-brand-700 bg-white shadow-sm transition-all flex items-center gap-1.5">
+                            <i class="fa-solid fa-grip"></i> Grid
+                        </button>
+                        <button id="viewListBtn" class="px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-600 hover:text-slate-900 transition-all flex items-center gap-1.5">
+                            <i class="fa-solid fa-list-ul"></i> Table
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Detailed Filters -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 border-t border-slate-100">
+                <div>
+                    <label for="ratingFilter" class="block text-xs font-medium text-slate-500 mb-1">Minimum Rating</label>
+                    <select id="ratingFilter" class="w-full bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-xs text-slate-700 focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                        <option value="0">All Ratings</option>
+                        <option value="4.5">4.5★ & Above</option>
+                        <option value="4.0">4.0★ & Above</option>
+                        <option value="3.5">3.5★ & Above</option>
+                        <option value="3.0">3.0★ & Above</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label for="hasWebsiteFilter" class="block text-xs font-medium text-slate-500 mb-1">Digital Presence</label>
+                    <select id="hasWebsiteFilter" class="w-full bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-xs text-slate-700 focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                        <option value="all">All Leads</option>
+                        <option value="website">Has Website</option>
+                        <option value="phone">Has Clean Phone</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label for="pageSizeSelect" class="block text-xs font-medium text-slate-500 mb-1">Items Per Page</label>
+                    <select id="pageSizeSelect" class="w-full bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-xs text-slate-700 focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                        <option value="6">6 per page</option>
+                        <option value="12" selected>12 per page</option>
+                        <option value="24">24 per page</option>
+                        <option value="48">48 per page</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Notification Banner / Alert Placeholder -->
+        <div id="alertContainer" class="hidden rounded-xl p-4 text-sm flex items-start gap-3 transition-all"></div>
+
+        <!-- Main Directory Views -->
+        <div id="loadingSpinner" class="py-16 text-center">
+            <div class="inline-block animate-spin rounded-full h-10 w-10 border-4 border-brand-200 border-t-brand-600"></div>
+            <p class="mt-3 text-slate-500 text-sm font-medium">Fetching directory dynamic records...</p>
+        </div>
+
+        <!-- Grid View -->
+        <div id="gridView" class="hidden grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5"></div>
+
+        <!-- List/Table View -->
+        <div id="listView" class="hidden glass-panel rounded-2xl shadow-sm overflow-hidden">
+            <div class="overflow-x-auto custom-scrollbar">
+                <table class="w-full text-left text-xs sm:text-sm text-slate-600">
+                    <thead class="bg-slate-100/80 uppercase text-[11px] text-slate-500 font-semibold tracking-wider border-b border-slate-200">
+                        <tr>
+                            <th class="py-3.5 px-4">Lead Name</th>
+                            <th class="py-3.5 px-4">Category</th>
+                            <th class="py-3.5 px-4">Rating</th>
+                            <th class="py-3.5 px-4">Clean Phone</th>
+                            <th class="py-3.5 px-4">Links</th>
+                            <th class="py-3.5 px-4 text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody" class="divide-y divide-slate-100"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="hidden glass-panel py-12 px-4 text-center rounded-2xl">
+            <div class="w-16 h-16 bg-blue-50 text-brand-600 rounded-full flex items-center justify-center mx-auto text-2xl mb-3">
+                <i class="fa-solid fa-folder-open"></i>
+            </div>
+            <h3 class="text-base font-semibold text-slate-800">No leads found</h3>
+            <p class="text-slate-500 text-xs sm:text-sm mt-1 max-w-sm mx-auto">We couldn't find any business matching your search filter parameters. Try adjusting your search query.</p>
+            <button id="resetFiltersBtn" class="mt-4 px-4 py-2 bg-brand-600 text-white rounded-lg text-xs font-medium hover:bg-brand-700 transition-all">
+                Reset All Filters
+            </button>
+        </div>
+
+        <!-- Pagination Navigation -->
+        <div id="paginationContainer" class="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-slate-200">
+            <div class="text-xs text-slate-500" id="paginationInfo">
+                Showing 0 to 0 of 0 entries
+            </div>
+            <div class="flex items-center space-x-1" id="paginationControls"></div>
+        </div>
+    </main>
+
+    <!-- Lead Detail Modal -->
+    <div id="detailModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden transition-opacity duration-200 opacity-0">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] flex flex-col overflow-hidden transform scale-95 transition-transform duration-200" id="modalCard">
+            <!-- Modal Header -->
+            <div class="bg-gradient-to-r from-brand-900 to-brand-700 p-5 text-white relative">
+                <button id="closeModalBtn" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-all">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+                <span id="modalCategory" class="inline-block px-2.5 py-0.5 text-[10px] font-semibold bg-blue-500/30 text-blue-100 rounded-full mb-2 border border-blue-300/30">Category</span>
+                <h2 id="modalTitle" class="text-xl font-bold leading-tight pr-6">Lead Title</h2>
+                <div class="flex items-center gap-2 mt-2 text-xs text-blue-100">
+                    <div id="modalRatingStars" class="flex text-amber-300 text-xs"></div>
+                    <span id="modalRatingScore" class="font-bold">4.5</span>
+                    <span id="modalReviewCount" class="opacity-80">(0 reviews)</span>
+                </div>
+            </div>
+
+            <!-- Modal Content body -->
+            <div class="p-6 overflow-y-auto custom-scrollbar space-y-4 flex-1">
+                <div class="space-y-3">
+                    <!-- Clean Phone -->
+                    <div class="p-3 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="w-9 h-9 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center">
+                                <i class="fa-solid fa-phone"></i>
+                            </div>
+                            <div>
+                                <p class="text-[10px] uppercase font-bold text-slate-400">Clean Phone Number</p>
+                                <p id="modalPhone" class="text-sm font-semibold text-slate-800">--</p>
+                            </div>
+                        </div>
+                        <button id="copyPhoneBtn" class="px-2.5 py-1.5 text-xs bg-white border border-slate-200 text-slate-600 rounded-lg hover:bg-slate-50 transition-all active:scale-95">
+                            <i class="fa-regular fa-copy"></i>
+                        </button>
+                    </div>
+
+                    <!-- Address -->
+                    <div class="p-3 bg-slate-50 rounded-xl border border-slate-100 flex items-start gap-3">
+                        <div class="w-9 h-9 rounded-lg bg-rose-100 text-rose-700 flex items-center justify-center shrink-0">
+                            <i class="fa-solid fa-location-dot"></i>
+                        </div>
+                        <div>
+                            <p class="text-[10px] uppercase font-bold text-slate-400">Address / Location</p>
+                            <p id="modalAddress" class="text-xs sm:text-sm text-slate-700 mt-0.5">--</p>
+                        </div>
+                    </div>
+
+                    <!-- Additional Metadata -->
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                            <p class="text-[10px] uppercase font-bold text-slate-400">Plus Code</p>
+                            <p id="modalPlusCode" class="text-xs font-mono text-slate-700 mt-0.5 truncate">N/A</p>
+                        </div>
+                        <div class="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                            <p class="text-[10px] uppercase font-bold text-slate-400">Place ID</p>
+                            <p id="modalPlaceId" class="text-xs font-mono text-slate-700 mt-0.5 truncate">N/A</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Button Matrix -->
+                <div class="pt-2 border-t border-slate-100">
+                    <p class="text-xs font-semibold text-slate-500 mb-2.5">Direct Link Actions</p>
+                    <div class="grid grid-cols-2 gap-2" id="modalActions">
+                        <!-- Dynamic Buttons -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="bg-slate-50 px-6 py-3 border-t border-slate-100 flex justify-end">
+                <button id="dismissModalBtn" class="px-4 py-2 bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg hover:bg-slate-300 transition-all">
+                    Close Details
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-5 right-5 bg-slate-900 text-white px-4 py-3 rounded-xl shadow-xl text-xs sm:text-sm flex items-center gap-2 z-50 transform translate-y-20 opacity-0 transition-all duration-300">
+        <i class="fa-solid fa-circle-check text-emerald-400"></i>
+        <span id="toastMsg">Action completed successfully</span>
+    </div>
+
+    <script>
+        // Data State Management
+        let rawLeadsData = [];
+        let filteredLeads = [];
+        let currentView = 'grid';
+        let currentPage = 1;
+        let pageSize = 12;
+
+        // Fallback Mock Data in case total-leads.json is unavailable
+        const fallbackLeads = [
+            {
+                "title": "Apex Digital Solutions Ltd",
+                "category": "Digital Marketing Agency",
+                "phone": "01833-988424",
+                "rating": 4.8,
+                "review_count": 142,
+                "address": "Level 5, Gulshan Tower, Dhaka 1212",
+                "website": "https://example.com/apex",
+                "google_map_link": "https://maps.google.com",
+                "facebook_link": "https://facebook.com"
+            },
+            {
+                "title": "Green Horizon Logistics",
+                "category": "Supply Chain & Transport",
+                "phone": "U+208001711-223344",
+                "rating": 4.2,
+                "review_count": 56,
+                "address": "Plot 12, Agrabad C/A, Chittagong",
+                "website": "https://example.com/greenhorizon",
+                "google_map_link": "https://maps.google.com"
+            },
+            {
+                "title": "BlueOcean IT Consulting",
+                "category": "Software Engineering",
+                "phone": "01912-345678",
+                "rating": 4.9,
+                "review_count": 210,
+                "address": "Banani Commercial Area, Road 11, Dhaka",
+                "website": "https://example.com/blueocean",
+                "google_map_link": "https://maps.google.com",
+                "facebook_link": "https://facebook.com"
+            },
+            {
+                "title": "Metro Health Diagnostics",
+                "category": "Medical Laboratory",
+                "phone": "+880 1800-000111",
+                "rating": 3.9,
+                "review_count": 89,
+                "address": "Dhanmondi Satmasjid Road, Dhaka",
+                "google_map_link": "https://maps.google.com"
+            },
+            {
+                "title": "Horizon Real Estate Group",
+                "category": "Property Developer",
+                "phone": "01677-889900",
+                "rating": 4.4,
+                "review_count": 31,
+                "address": "Uttara Sector 3, Dhaka",
+                "website": "https://example.com/horizon",
+                "facebook_link": "https://facebook.com"
+            },
+            {
+                "title": "Starlight Creative Studio",
+                "category": "Design & Branding",
+                "phone": "01555-112233",
+                "rating": 4.7,
+                "review_count": 94,
+                "address": "Mirpur DOHS, Dhaka",
+                "website": "https://example.com/starlight"
+            }
+        ];
+
+        // Clean hidden Unicode glyphs and characters from phone strings
+        function sanitizePhoneNumber(rawPhone) {
+            if (!rawPhone) return 'N/A';
+            // Remove U+2080..U+2089, specific non-printable characters or weird glyphs like  (\uE0B0)
+            let cleaned = rawPhone
+                .replace(/[\uE000-\uF8FF]/g, '') // Private Use Area characters
+                .replace(/[\u200B-\u200D\uFEFF]/g, '') // Zero width spaces
+                .replace(/U\+208[0-9]/gi, '') // Literal string representations
+                .trim();
+            return cleaned || 'N/A';
+        }
+
+        // Fetch Data Function
+        async function fetchLeadsData() {
+            showLoading(true);
+            const dataStatus = document.getElementById('dataStatus');
+            const refreshIcon = document.getElementById('refreshIcon');
+            refreshIcon.classList.add('animate-spin');
+            
+            try {
+                // Asynchronously attempt to fetch total-leads.json
+                const response = await fetch('total-leads.json');
+                if (!response.ok) {
+                    throw new Error(`HTTP error status: ${response.status}`);
+                }
+                const data = await response.json();
+                
+                // Validate if data is array or object array
+                rawLeadsData = Array.isArray(data) ? data : (data.leads || []);
+                if (rawLeadsData.length === 0) {
+                    throw new Error("Fetched JSON was empty or improperly formatted.");
+                }
+
+                showAlert('Successfully loaded live data from total-leads.json', 'success');
+                dataStatus.textContent = "Live JSON";
+            } catch (err) {
+                console.warn('Failed to fetch total-leads.json, utilizing fallback data.', err);
+                rawLeadsData = fallbackLeads;
+                showAlert('Could not load total-leads.json. Displaying demonstration dataset.', 'warning');
+                dataStatus.textContent = "Demo Mode";
+            } finally {
+                // Sanitize dataset items
+                rawLeadsData = rawLeadsData.map((item, index) => ({
+                    id: item.id || `lead-${index + 1}`,
+                    title: item.title || item.name || 'Unnamed Business',
+                    category: item.category || item.type || 'General Lead',
+                    phoneRaw: item.phone || '',
+                    phoneClean: sanitizePhoneNumber(item.phone),
+                    rating: parseFloat(item.rating || item.stars || 0) || 0,
+                    reviewCount: parseInt(item.review_count || item.reviews || 0, 10),
+                    address: item.address || item.location || 'Address not listed',
+                    website: item.website || item.site || null,
+                    googleMapLink: item.google_map_link || item.maps_url || null,
+                    facebookLink: item.facebook_link || item.fb || null,
+                    plusCode: item.plus_code || 'N/A',
+                    placeId: item.place_id || 'N/A'
+                }));
+
+                refreshIcon.classList.remove('animate-spin');
+                showLoading(false);
+                updateStatistics();
+                applyFilters();
+            }
+        }
+
+        function updateStatistics() {
+            const total = rawLeadsData.length;
+            const withRating = rawLeadsData.filter(l => l.rating > 0);
+            const avgRating = withRating.length > 0 
+                ? (withRating.reduce((acc, curr) => acc + curr.rating, 0) / withRating.length).toFixed(1) 
+                : '0.0';
+            
+            const withWebsites = rawLeadsData.filter(l => l.website && l.website !== '');
+            const withPhones = rawLeadsData.filter(l => l.phoneClean && l.phoneClean !== 'N/A');
+
+            document.getElementById('statTotal').textContent = total;
+            document.getElementById('statRating').textContent = `${avgRating} ★`;
+            document.getElementById('statRatingCount').textContent = withRating.length;
+            
+            document.getElementById('statWebsites').textContent = withWebsites.length;
+            document.getElementById('statWebsitesPct').textContent = total ? `${Math.round((withWebsites.length / total) * 100)}%` : '0%';
+            
+            document.getElementById('statPhones').textContent = withPhones.length;
+            document.getElementById('statPhonesPct').textContent = total ? `${Math.round((withPhones.length / total) * 100)}%` : '0%';
+        }
+
+        function applyFilters() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const minRating = parseFloat(document.getElementById('ratingFilter').value) || 0;
+            const presence = document.getElementById('hasWebsiteFilter').value;
+
+            filteredLeads = rawLeadsData.filter(lead => {
+                // Search query match
+                const matchQuery = !query || 
+                    lead.title.toLowerCase().includes(query) ||
+                    lead.phoneClean.toLowerCase().includes(query) ||
+                    lead.category.toLowerCase().includes(query) ||
+                    lead.address.toLowerCase().includes(query);
+
+                // Rating match
+                const matchRating = lead.rating >= minRating;
+
+                // Presence match
+                let matchPresence = true;
+                if (presence === 'website') matchPresence = !!lead.website;
+                if (presence === 'phone') matchPresence = lead.phoneClean !== 'N/A';
+
+                return matchQuery && matchRating && matchPresence;
+            });
+
+            currentPage = 1;
+            renderCurrentPage();
+        }
+
+        function renderCurrentPage() {
+            const gridContainer = document.getElementById('gridView');
+            const tableBody = document.getElementById('tableBody');
+            const emptyState = document.getElementById('emptyState');
+
+            if (filteredLeads.length === 0) {
+                gridContainer.classList.add('hidden');
+                document.getElementById('listView').classList.add('hidden');
+                emptyState.classList.remove('hidden');
+                renderPaginationInfo(0, 0, 0);
+                document.getElementById('paginationControls').innerHTML = '';
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+
+            // Pagination indexes
+            const startIdx = (currentPage - 1) * pageSize;
+            const endIdx = Math.min(startIdx + pageSize, filteredLeads.length);
+            const pageData = filteredLeads.slice(startIdx, endIdx);
+
+            if (currentView === 'grid') {
+                gridContainer.classList.remove('hidden');
+                document.getElementById('listView').classList.add('hidden');
+                gridContainer.innerHTML = pageData.map(lead => createGridCardHTML(lead)).join('');
+            } else {
+                document.getElementById('listView').classList.remove('hidden');
+                gridContainer.classList.add('hidden');
+                tableBody.innerHTML = pageData.map(lead => createTableRowHTML(lead)).join('');
+            }
+
+            renderPaginationInfo(startIdx + 1, endIdx, filteredLeads.length);
+            renderPaginationButtons();
+        }
+
+        function createGridCardHTML(lead) {
+            const starsHTML = generateStarsHTML(lead.rating);
+            return `
+                <div onclick="openLeadModal('${lead.id}')" class="glass-panel rounded-2xl p-5 shadow-sm hover:shadow-lg transition-all transform hover:-translate-y-1 cursor-pointer border border-slate-200/80 flex flex-col justify-between group">
+                    <div>
+                        <div class="flex items-start justify-between gap-2 mb-2">
+                            <span class="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider bg-blue-50 text-brand-700 rounded-lg border border-blue-100">
+                                ${escapeHTML(lead.category)}
+                            </span>
+                            <div class="flex items-center text-xs text-amber-500 font-semibold bg-amber-50 px-2 py-0.5 rounded-md">
+                                <i class="fa-solid fa-star text-amber-400 mr-1"></i> ${lead.rating ? lead.rating.toFixed(1) : 'N/A'}
+                            </div>
+                        </div>
+
+                        <h3 class="font-bold text-slate-800 text-base group-hover:text-brand-600 transition-colors line-clamp-1 mb-2">
+                            ${escapeHTML(lead.title)}
+                        </h3>
+
+                        <div class="space-y-1.5 text-xs text-slate-600 mb-4">
+                            <p class="flex items-center gap-2">
+                                <i class="fa-solid fa-phone text-emerald-600 w-4"></i>
+                                <span class="font-medium text-slate-700">${escapeHTML(lead.phoneClean)}</span>
+                            </p>
+                            <p class="flex items-start gap-2 line-clamp-2">
+                                <i class="fa-solid fa-location-dot text-rose-500 w-4 mt-0.5 shrink-0"></i>
+                                <span>${escapeHTML(lead.address)}</span>
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+                        <div class="flex items-center gap-2">
+                            ${lead.website ? '<span class="text-blue-600"><i class="fa-solid fa-globe"></i></span>' : ''}
+                            ${lead.googleMapLink ? '<span class="text-rose-600"><i class="fa-solid fa-map-location-dot"></i></span>' : ''}
+                            ${lead.facebookLink ? '<span class="text-blue-700"><i class="fa-brands fa-facebook"></i></span>' : ''}
+                        </div>
+                        <span class="text-brand-600 font-semibold group-hover:translate-x-1 transition-transform inline-flex items-center gap-1">
+                            Details <i class="fa-solid fa-chevron-right text-[10px]"></i>
+                        </span>
+                    </div>
+                </div>
+            `;
+        }
+
+        function createTableRowHTML(lead) {
+            return `
+                <tr onclick="openLeadModal('${lead.id}')" class="hover:bg-blue-50/50 transition-colors cursor-pointer">
+                    <td class="py-3.5 px-4 font-semibold text-slate-800">${escapeHTML(lead.title)}</td>
+                    <td class="py-3.5 px-4"><span class="px-2 py-0.5 text-[11px] bg-slate-100 text-slate-600 rounded-md">${escapeHTML(lead.category)}</span></td>
+                    <td class="py-3.5 px-4">
+                        <span class="inline-flex items-center text-xs font-semibold text-amber-600">
+                            <i class="fa-solid fa-star text-amber-400 mr-1"></i> ${lead.rating ? lead.rating.toFixed(1) : 'N/A'}
+                        </span>
+                    </td>
+                    <td class="py-3.5 px-4 font-mono text-xs text-slate-700">${escapeHTML(lead.phoneClean)}</td>
+                    <td class="py-3.5 px-4 space-x-2">
+                        ${lead.website ? `<a href="${lead.website}" target="_blank" onclick="event.stopPropagation()" class="text-brand-600 hover:text-brand-800"><i class="fa-solid fa-globe"></i></a>` : ''}
+                        ${lead.googleMapLink ? `<a href="${lead.googleMapLink}" target="_blank" onclick="event.stopPropagation()" class="text-rose-500 hover:text-rose-700"><i class="fa-solid fa-map-location-dot"></i></a>` : ''}
+                    </td>
+                    <td class="py-3.5 px-4 text-right">
+                        <button class="px-2.5 py-1 text-xs bg-brand-50 text-brand-700 rounded-lg hover:bg-brand-100 font-medium">View</button>
+                    </td>
+                </tr>
+            `;
+        }
+
+        function generateStarsHTML(rating) {
+            let html = '';
+            const fullStars = Math.floor(rating);
+            const hasHalf = rating % 1 >= 0.5;
+            for (let i = 0; i < 5; i++) {
+                if (i < fullStars) {
+                    html += '<i class="fa-solid fa-star"></i>';
+                } else if (i === fullStars && hasHalf) {
+                    html += '<i class="fa-solid fa-star-half-stroke"></i>';
+                } else {
+                    html += '<i class="fa-regular fa-star text-slate-300"></i>';
+                }
+            }
+            return html;
+        }
+
+        function renderPaginationInfo(start, end, total) {
+            document.getElementById('paginationInfo').textContent = 
+                `Showing ${start} to ${end} of ${total} entries`;
+        }
+
+        function renderPaginationButtons() {
+            const container = document.getElementById('paginationControls');
+            const totalPages = Math.ceil(filteredLeads.length / pageSize) || 1;
+            
+            let buttonsHTML = '';
+
+            // Previous Button
+            buttonsHTML += `
+                <button onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled class="opacity-40 cursor-not-allowed"' : ''} 
+                    class="px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-medium bg-white text-slate-600 hover:bg-slate-50 transition-all">
+                    Prev
+                </button>
+            `;
+
+            // Page numbers
+            for (let i = 1; i <= totalPages; i++) {
+                if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
+                    buttonsHTML += `
+                        <button onclick="changePage(${i})" 
+                            class="px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${i === currentPage ? 'bg-brand-600 text-white shadow-sm' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'}">
+                            ${i}
+                        </button>
+                    `;
+                } else if (i === currentPage - 2 || i === currentPage + 2) {
+                    buttonsHTML += `<span class="px-1 text-slate-400 text-xs">...</span>`;
+                }
+            }
+
+            // Next Button
+            buttonsHTML += `
+                <button onclick="changePage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled class="opacity-40 cursor-not-allowed"' : ''} 
+                    class="px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-medium bg-white text-slate-600 hover:bg-slate-50 transition-all">
+                    Next
+                </button>
+            `;
+
+            container.innerHTML = buttonsHTML;
+        }
+
+        function changePage(newPage) {
+            const totalPages = Math.ceil(filteredLeads.length / pageSize) || 1;
+            if (newPage < 1 || newPage > totalPages) return;
+            currentPage = newPage;
+            renderCurrentPage();
+            window.scrollTo({ top: 300, behavior: 'smooth' });
+        }
+
+        function openLeadModal(leadId) {
+            const lead = rawLeadsData.find(l => l.id === leadId);
+            if (!lead) return;
+
+            document.getElementById('modalTitle').textContent = lead.title;
+            document.getElementById('modalCategory').textContent = lead.category;
+            document.getElementById('modalRatingScore').textContent = lead.rating ? lead.rating.toFixed(1) : 'N/A';
+            document.getElementById('modalReviewCount').textContent = `(${lead.reviewCount} reviews)`;
+            document.getElementById('modalRatingStars').innerHTML = generateStarsHTML(lead.rating);
+            document.getElementById('modalPhone').textContent = lead.phoneClean;
+            document.getElementById('modalAddress').textContent = lead.address;
+            document.getElementById('modalPlusCode').textContent = lead.plusCode;
+            document.getElementById('modalPlaceId').textContent = lead.placeId;
+
+            // Copy phone button setup
+            const copyBtn = document.getElementById('copyPhoneBtn');
+            copyBtn.onclick = () => copyToClipboard(lead.phoneClean, 'Phone number copied!');
+
+            // Action Matrix setup
+            const actionsContainer = document.getElementById('modalActions');
+            let actionsHTML = '';
+
+            if (lead.phoneClean !== 'N/A') {
+                actionsHTML += `
+                    <a href="tel:${lead.phoneClean}" class="p-2.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-xl flex items-center gap-2 text-xs font-semibold transition-all">
+                        <i class="fa-solid fa-phone text-emerald-600"></i> Direct Call
+                    </a>
+                `;
+            }
+
+            if (lead.googleMapLink) {
+                actionsHTML += `
+                    <a href="${lead.googleMapLink}" target="_blank" class="p-2.5 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-xl flex items-center gap-2 text-xs font-semibold transition-all">
+                        <i class="fa-solid fa-map-location-dot text-rose-600"></i> Google Maps
+                    </a>
+                `;
+            }
+
+            if (lead.website) {
+                actionsHTML += `
+                    <a href="${lead.website}" target="_blank" class="p-2.5 bg-blue-50 hover:bg-blue-100 text-brand-700 rounded-xl flex items-center gap-2 text-xs font-semibold transition-all">
+                        <i class="fa-solid fa-globe text-brand-600"></i> Visit Website
+                    </a>
+                `;
+            }
+
+            if (lead.facebookLink) {
+                actionsHTML += `
+                    <a href="${lead.facebookLink}" target="_blank" class="p-2.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-xl flex items-center gap-2 text-xs font-semibold transition-all">
+                        <i class="fa-brands fa-facebook text-indigo-600"></i> Facebook Page
+                    </a>
+                `;
+            }
+
+            if (!actionsHTML) {
+                actionsHTML = `<p class="text-xs text-slate-400 col-span-2">No direct link actions registered for this entry.</p>`;
+            }
+
+            actionsContainer.innerHTML = actionsHTML;
+
+            // Show Modal with Animation
+            const modal = document.getElementById('detailModal');
+            const modalCard = document.getElementById('modalCard');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                modalCard.classList.remove('scale-95');
+                modalCard.classList.add('scale-100');
+            }, 10);
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('detailModal');
+            const modalCard = document.getElementById('modalCard');
+            modal.classList.add('opacity-0');
+            modalCard.classList.remove('scale-100');
+            modalCard.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 200);
+        }
+
+        // Copy Helper function
+        function copyToClipboard(text, message) {
+            if (!text || text === 'N/A') return;
+            const dummy = document.createElement("textarea");
+            document.body.appendChild(dummy);
+            dummy.value = text;
+            dummy.select();
+            document.execCommand("copy");
+            document.body.removeChild(dummy);
+            showToast(message);
+        }
+
+        // Toast Helper
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastMsg').textContent = msg;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 2500);
+        }
+
+        // Alert Banner Helper
+        function showAlert(msg, type = 'info') {
+            const alert = document.getElementById('alertContainer');
+            alert.classList.remove('hidden', 'bg-emerald-50', 'text-emerald-800', 'bg-amber-50', 'text-amber-800');
+            if (type === 'success') {
+                alert.classList.add('bg-emerald-50', 'text-emerald-800', 'border', 'border-emerald-200');
+                alert.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-600 mt-0.5"></i> <div>${msg}</div>`;
+            } else {
+                alert.classList.add('bg-amber-50', 'text-amber-800', 'border', 'border-amber-200');
+                alert.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-amber-600 mt-0.5"></i> <div>${msg}</div>`;
+            }
+        }
+
+        function showLoading(isLoading) {
+            const spinner = document.getElementById('loadingSpinner');
+            if (isLoading) {
+                spinner.classList.remove('hidden');
+                document.getElementById('gridView').classList.add('hidden');
+                document.getElementById('listView').classList.add('hidden');
+            } else {
+                spinner.classList.add('hidden');
+            }
+        }
+
+        function escapeHTML(str) {
+            if (!str) return '';
+            return str.replace(/[&<>'"]/g, 
+                tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+            );
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            // Fetch Initial Data
+            fetchLeadsData();
+
+            // Search input listener
+            const searchInput = document.getElementById('searchInput');
+            const clearSearchBtn = document.getElementById('clearSearch');
+            
+            searchInput.addEventListener('input', (e) => {
+                if (e.target.value) {
+                    clearSearchBtn.classList.remove('hidden');
+                } else {
+                    clearSearchBtn.classList.add('hidden');
+                }
+                applyFilters();
+            });
+
+            clearSearchBtn.addEventListener('click', () => {
+                searchInput.value = '';
+                clearSearchBtn.classList.add('hidden');
+                applyFilters();
+            });
+
+            // Filters Listener
+            document.getElementById('ratingFilter').addEventListener('change', applyFilters);
+            document.getElementById('hasWebsiteFilter').addEventListener('change', applyFilters);
+            document.getElementById('pageSizeSelect').addEventListener('change', (e) => {
+                pageSize = parseInt(e.target.value, 10);
+                applyFilters();
+            });
+
+            // View Switchers
+            const viewGridBtn = document.getElementById('viewGridBtn');
+            const viewListBtn = document.getElementById('viewListBtn');
+
+            viewGridBtn.addEventListener('click', () => {
+                currentView = 'grid';
+                viewGridBtn.className = 'px-3 py-1.5 text-xs font-semibold rounded-lg text-brand-700 bg-white shadow-sm transition-all flex items-center gap-1.5';
+                viewListBtn.className = 'px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-600 hover:text-slate-900 transition-all flex items-center gap-1.5';
+                renderCurrentPage();
+            });
+
+            viewListBtn.addEventListener('click', () => {
+                currentView = 'list';
+                viewListBtn.className = 'px-3 py-1.5 text-xs font-semibold rounded-lg text-brand-700 bg-white shadow-sm transition-all flex items-center gap-1.5';
+                viewGridBtn.className = 'px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-600 hover:text-slate-900 transition-all flex items-center gap-1.5';
+                renderCurrentPage();
+            });
+
+            // Reset button
+            document.getElementById('resetFiltersBtn').addEventListener('click', () => {
+                searchInput.value = '';
+                clearSearchBtn.classList.add('hidden');
+                document.getElementById('ratingFilter').value = '0';
+                document.getElementById('hasWebsiteFilter').value = 'all';
+                applyFilters();
+            });
+
+            // Sync Button
+            document.getElementById('refreshBtn').addEventListener('click', fetchLeadsData);
+
+            // Modal Controls
+            document.getElementById('closeModalBtn').addEventListener('click', closeModal);
+            document.getElementById('dismissModalBtn').addEventListener('click', closeModal);
+            document.getElementById('detailModal').addEventListener('click', (e) => {
+                if (e.target === document.getElementById('detailModal')) closeModal();
+            });
+        });
+    </script>
+</body>
+</html>
